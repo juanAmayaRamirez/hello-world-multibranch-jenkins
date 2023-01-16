@@ -1,26 +1,102 @@
-# Jenkins cicd aws pipeline
+Date:  16/01/2023  Time:  00:01
+Status: #idea
+Tags: [[Devops]]
+Repository: 
 
-## initial setup
-### requirements:
-Install docker desktop  
-* windows: https://docs.docker.com/desktop/install/windows-install/   
-* linux: https://docs.docker.com/desktop/install/linux-install/  
-* mac: https://docs.docker.com/desktop/install/mac-install/
-### step by step
-1. with docker installed go to https://hub.docker.com/ and search for jenkins/jenkins image
-2. there is a command to download the image you desire, for the latest just run  
-`$ docker pull jenkins/jenkins`
-3. now we will run the dokcer container with the downloaded image, expose ports 8080, 50000 and mount a persistant volume jenkins_home with the following command  
-`$ docker run -d --name jenkins -p 8080:8080 -p 50000:50000 -v jenkins_home:/var/jenkins_home jenkins/jenkins`
-4. verify the container just created  
-`$ docker ps -l`
-5. go to local host 8080 and see the path where jenkins stored the password
-6. with docker exec read the password for example with a cat  
-`$ docker exec jenkins cat /var/jenkins_home/secrets/initialAdminPassword`
-7. after entering the password, if this is the first time using jenkins, just install the recommended plugins but if you know what you are doing, select the plugins you need, create the admin user and thats it.
-8. now that we have the container up and running, we can remove ir with `$ docker rm -f` to terminate it whenever we want and the configuration will not be los since we assigned a volume. 
-### Docker compose
-Docker Compose is a tool that helps you to run multiple containers as a single service. It allows you to define all the containers and the connections between them in a single file, and then start, stop, and manage all of them with a single command. It makes it easy to set up and manage complex applications. Think of it as a way to organize and run multiple docker containers together seamlessly.
+# hello-world-multibranch-jenkins
+In this repo are some basic Jenkins concepts and a step by step process of building a simple jenkins multibranch pipeline.
 
-Instalation  
-linux: https://www.digitalocean.com/community/tutorials/how-to-install-and-use-docker-compose-on-ubuntu-20-04  
+## Plugins
+these are one of the most used plugins when building a jenkins pipeline and mostly even necessary:
+* pipelines
+* pipeline: stage step
+* For github integrations: git, github integration plugin, git client
+
+## Credentials
+### Scopes
+1. Systems
+   available only on jenkins server, *not* accesible by jenkins jobs
+2. Global
+   accesible everywhere from jenkins
+3. Project
+   *only* for the multibranch pipeline limited to the project
+### Types
+* username & password
+* certificate
+* secret file
+* depending on plugins you might get new credential types
+
+## Pipelines
+
+1. freestyle
+   for simple tasks / testing
+2. Pipeline
+   single branch for a hole delivery lifecycle builld, package, deploy etc...
+3. multibranch pipeline
+   for multibranch deployments
+
+## Jenkinsfile
+it can be writen as scripted pipeline or declarative pipeline
+### Scripted
+* first syntax
+* groovy engine
+* advanced scripting capabilities
+### Declarative
+* last adition
+* easier to get started but not that powerfull
+* pre-define structure
+#### Structure
+##### Pipeline
+must be at the top level
+##### agent
+where to execute the pipeline
+##### stages 
+where the "work" happens
+##### steps
+all of the code that jenkins will run
+
+
+```json
+pipeline{
+	agent any
+	stages{
+		stage("build"){
+			steps{
+				echo "building application ..."
+			}
+		}
+		stage("test"){
+			steps{
+				echo "testing application ..."
+			}
+		}
+		stage("deploy"){
+			steps{
+				echo "deploying application ..."
+			}
+		}
+	}
+}
+```
+
+## Triggers
+### push notification
+source code management system notifies jenkins on new commit
+which off course is more efficient
+### polling
+jenkins polls the repository in regular time intervals
+
+## Finally creating a multibranch pipeline
+1. Before even starting please make sure you have jenkins installed locally or on an EC2: [[Jenkins Setup]]
+2. create credentials for the github repo by going to `/manage/credentials/store/system/domain/`
+3. go to create a new task and select multibranch ![[Pasted image 20230116000615.png]]
+4. Select git and copy the url https://github.com/juanAmayaRamirez/hello-world-multibranch-jenkins
+5. Go to pipeline credentials and create a new one with email/password of the github repository
+6. After the credential is created add the credentials to pipeline
+7. Create the Jenkinsfile in the root directiry of the repository 
+8. Scan pipeline
+9. inside the stage clik on `build now`
+
+---
+# References
+* https://www.youtube.com/watch?v=pMO26j2OUME&list=PLy7NrYWoggjw_LIiDK1LXdNN82uYuuuiC
